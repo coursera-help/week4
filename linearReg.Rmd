@@ -1,0 +1,163 @@
+---
+title: "LinearRegression_MarketingA
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Load Libraries**
+```{r LoadLibraries, echo=TRUE}  
+library(dplyr)
+library(tidyr)
+library(MASS)
+library(caTools)
+library(ISLR)
+library(car)
+library(ggplot2)
+library(plotly)
+library(gridExtra)
+library(corrplot)
+``` 
+
+**Read Data**
+```{r readData, echo=TRUE}
+presData<-as.data.frame(Prestige)
+
+```   
+
+**Read First 6 recs**
+```{r ReadFirst, echo=TRUE}
+head(presData)
+```
+**Read Last 6 recs**
+```{r ReadLast, echo=TRUE}
+tail(presData)
+```
+
+**Structure of the data frame**
+```{r struc, echo=TRUE}
+str(presData)
+glimpse(presData)
+```
+
+**No of Cols**
+```{r nCol, echo=TRUE}
+ncol(presData)
+```
+
+**No of rows**
+```{r nRow, echo=TRUE}
+nrow(presData)
+```
+
+**Names**
+```{r colNames, echo=TRUE}
+names(presData)
+colnames(presData)
+```  
+
+**Summary stat**
+```{r summaryStat, echo=TRUE}
+summary(presData)
+```  
+
+**Plots**
+```{r plots, echo=TRUE}
+p1<-ggplot(presData, aes(x=education)) + geom_histogram( binwidth = 1)+
+  labs(title="Histogram of Average years of Education") +
+  labs(x="average years of Education") +
+  labs(y="Frequency Count")
+
+p2<-ggplot(presData, aes(x=income)) + geom_histogram( binwidth = 1000)+
+  labs(title="Histogram of Income") +
+  labs(x="average years of Income") +
+  labs(y="Frequency Count")
+
+p3<-ggplot(presData, aes(x=education, y=income)) + geom_point( position="jitter")+
+  labs(title="Relationship between Education and Income") +
+  labs(x="Education") +
+  labs(y="Income")
+
+p4<-ggplot(presData, aes(x=education, y=income)) + geom_point() + geom_smooth( method="lm", se=FALSE)+
+  labs(title="Linear Relationship between Education and Income") +
+  labs(x="Education") +
+  labs(y="Income")
+grid.arrange(p1,p2, p3, p4, nrow=2, ncol=2)
+```
+```{r}
+# get outliers count
+for (i in 1:ncol(presData))
+  if(class(presData[,i])=='integer')
+  { print(colnames(presData[i]))
+   boxplot(presData[,i])
+    }
+
+            
+```
+
+```{r}
+#Removing outliers:
+detectOutliers<-function(inp,na.rm=T){
+  if(class(inp)!="numeric"){
+    return("NonNumeric Column")
+  }
+i.qnt<- quantile(inp,probs=c(.25,.75),na.rm = na.rm)
+i.max<- 1.5*IQR(inp,na.rm = na.rm)
+otp<-inp
+otp[inp<(i.qnt[1]-i.max)]<-NA
+otp[inp>(i.qnt[2]+i.max)]<-NA
+return(inp[is.na(otp)])}
+```
+
+```{r}
+ints <- c()
+for(i in 1:ncol(presData))
+ {if(is.numeric(presData[,i]))
+{
+ints<-c(ints,i)}}
+print(ints)
+cor(presData[,ints],presData$income)
+corrplot(cor(presData[,ints]),method = "pie",number.font = 1)
+cor(presData[,ints])
+```
+
+
+**Model1**
+```{r model1, echo=TRUE}
+lm.fit1<-lm(income~., data=presData)
+lm.fit1
+summary(lm.fit1)
+vif(lm.fit1)
+plot(lm.fit1)
+```
+
+**Model2**
+```{r model2, echo=TRUE}
+
+lm.fit2<-lm(income~women+prestige+census+education, data=presData)
+lm.fit2
+summary(lm.fit2)
+vif(lm.fit2)
+```
+
+**Model3**
+```{r model3, echo=TRUE}
+lm.fit3<-lm(income~women+prestige+census, data=presData)
+lm.fit3
+summary(lm.fit3)
+vif(lm.fit3)
+```
+
+```{r}
+lm.fit4<-lm(income~women+prestige, data=presData)
+lm.fit4
+summary(lm.fit4)
+plot(lm.fit4)
+```
+
+
+
